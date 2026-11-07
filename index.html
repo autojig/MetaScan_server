@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaScan - 물(Water) 대사 백과</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 내가 만든 CSS -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body
+    class="bg-slate-950 text-slate-100 min-h-screen flex justify-center items-start py-6 px-4"
+  >
+    <div
+      class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6"
+    >
+      <!-- 상단 헤더 -->
+      <div
+        class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6"
+      >
+        <div>
+          <span
+            class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400"
+          >
+            PROTOTYPE v1.0
+          </span>
+
+          <h1 class="text-xl font-extrabold mt-1.5 text-white">
+            대사·저속노화 음식 백과
+          </h1>
+        </div>
+
+        <div
+          id="db-status"
+          class="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg"
+        >
+          로컬 모드 작동중
+        </div>
+      </div>
+
+      <!-- ======================= -->
+      <!-- 1단계 : 시작 화면 -->
+      <!-- ======================= -->
+
+      <div
+        id="step-question"
+        class="py-12 flex flex-col items-center justify-center text-center"
+      >
+        <p class="text-slate-400 text-sm mb-6">
+          버튼을 눌러 오늘 내 몸에 들어가는 것의<br />
+          <span class="text-emerald-400 font-semibold"> 진짜 대사 작용 </span>
+          을 확인하세요
+        </p>
+
+        <button
+          onclick="showFoodList()"
+          class="w-28 h-28 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-400 text-slate-950 text-5xl font-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+        >
+          ?
+        </button>
+
+        <span class="text-xs text-slate-500 mt-4"> 클릭하여 음식 열기 </span>
+      </div>
+
+      <!-- ======================= -->
+      <!-- 2단계 : 음식 선택 -->
+      <!-- ======================= -->
+
+      <div id="step-food-list" class="hidden fade-in">
+        <p
+          class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3"
+        >
+          분석할 항목을 선택하세요
+        </p>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <!-- 물 -->
+          <button
+            onclick="openWaterDetail()"
+            class="p-4 rounded-2xl bg-slate-800/90 border-2 border-cyan-400 hover:bg-slate-800 text-left transition flex flex-col justify-between h-28"
+          >
+            <span class="text-3xl">💧</span>
+
+            <div>
+              <div class="font-bold text-white text-base">물 (Water)</div>
+
+              <div class="text-xs text-cyan-400">체중·온도·카페인 연동</div>
+            </div>
+          </button>
+
+          <!-- 라면 -->
+          <div
+            class="p-4 rounded-2xl bg-slate-800/30 border border-slate-800 text-left opacity-40 flex flex-col justify-between h-28"
+          >
+            <span class="text-3xl">🍜</span>
+
+            <div>
+              <div class="font-bold text-slate-400 text-base">
+                라면 (준비중)
+              </div>
+
+              <div class="text-xs text-slate-500">나트륨·칼륨 해독 공식</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================= -->
+      <!-- 3단계 : 물 상세 페이지 -->
+      <!-- ======================= -->
+
+      <div id="step-water-detail" class="hidden fade-in space-y-5">
+        <!-- 뒤로가기 -->
+        <div class="flex items-center justify-between">
+          <button
+            onclick="resetToHome()"
+            class="text-xs text-slate-400 hover:text-white"
+          >
+            ← 처음으로
+          </button>
+
+          <span class="text-xs text-cyan-400 font-semibold">
+            💧 수분 대사 프로토콜
+          </span>
+        </div>
+
+        <!-- 계산 결과 -->
+        <div
+          class="bg-gradient-to-br from-cyan-950 to-slate-900 border border-cyan-500/40 rounded-2xl p-5 text-center"
+        >
+          <p class="text-xs text-cyan-300 mb-1">
+            오늘 내 조건에 맞춘 최적 수분 섭취량
+          </p>
+
+          <div class="text-4xl font-black text-white my-1">
+            <span id="result-liters"> 2.31 </span>
+
+            <span class="text-xl font-normal text-cyan-400"> L / 일 </span>
+          </div>
+
+          <p id="result-cups" class="text-xs text-slate-300 mt-1">
+            종이컵(200ml) 기준 약 11.5잔
+          </p>
+        </div>
+
+        <!-- 사용자 입력 -->
+        <div
+          class="bg-slate-800/60 border border-slate-800 rounded-2xl p-4 space-y-4"
+        >
+          <!-- 체중 -->
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-300 font-medium"> ⚖️ 현재 체중 </span>
+
+              <span class="text-cyan-400 font-bold">
+                <span id="label-weight">70</span> kg
+              </span>
+            </div>
+
+            <input
+              id="input-weight"
+              type="range"
+              min="40"
+              max="110"
+              value="70"
+              oninput="calculateWater()"
+              class="w-full accent-cyan-400 cursor-pointer"
+            />
+
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              * 기본 대사 공식: 체중(kg) × 33ml
+            </p>
+          </div>
+
+          <!-- 카페인 -->
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-300 font-medium">
+                ☕ 오늘 마신 커피(카페인)
+              </span>
+
+              <span class="text-amber-400 font-bold">
+                <span id="label-coffee">1</span> 잔
+              </span>
+            </div>
+
+            <input
+              id="input-coffee"
+              type="range"
+              min="0"
+              max="6"
+              value="1"
+              oninput="calculateWater()"
+              class="w-full accent-amber-400 cursor-pointer"
+            />
+
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              * 이뇨 작용 보정: 커피 1잔당 수분 +200ml 추가 보충
+            </p>
+          </div>
+
+          <!-- 운동 -->
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-300 font-medium">
+                🏃 고강도 운동·러닝 시간
+              </span>
+
+              <span class="text-emerald-400 font-bold">
+                <span id="label-workout">30</span> 분
+              </span>
+            </div>
+
+            <input
+              id="input-workout"
+              type="range"
+              min="0"
+              max="120"
+              step="10"
+              value="30"
+              oninput="calculateWater()"
+              class="w-full accent-emerald-400 cursor-pointer"
+            />
+
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              * 발한 손실 보정: 운동 30분당 +350ml 추가
+            </p>
+          </div>
+        </div>
+
+        <!-- 과학적 가이드 -->
+        <div>
+          <p class="text-xs font-bold text-slate-400 mb-2">
+            📌 일상에서 바로 쓰는 4가지 과학적 디테일
+          </p>
+
+          <div id="tips-container" class="space-y-2.5"></div>
+        </div>
+
+        <!-- DB 저장 -->
+        <div class="pt-2 border-t border-slate-800">
+          <button
+            onclick="saveUserLogToDB()"
+            class="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm transition shadow-lg shadow-cyan-500/20"
+          >
+            💾 내 조건(체중·수분량) DB에 기록하기
+          </button>
+
+          <p
+            id="save-msg"
+            class="text-center text-xs text-emerald-400 mt-2 hidden"
+          ></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 내가 만든 JavaScript -->
+    <script src="script.js"></script>
+  </body>
+</html>
